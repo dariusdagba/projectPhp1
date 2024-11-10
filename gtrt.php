@@ -10,12 +10,20 @@
 <body>
 <div class="container mt-3">
 <?php
+session_start();
+ob_start();
 try {
     if (isset($_GET['idmembre'])) {
         $idmembre = $_GET['idmembre'];
         $connect = mysqli_connect('localhost', 'root', '', 'bonnebouffe');
+        if (!$connect) {
+            throw new Exception('Erreur de connexion : ' . mysqli_connect_error());
+        }
         echo "connexion réussie <br>";
         $requete = mysqli_query($connect, "SELECT * FROM MEMBRES WHERE idmembre='$idmembre'");
+        if (!$requete) {
+            throw new Exception('Erreur de requête : ' . mysqli_error($connect));
+        }
         if (mysqli_num_rows($requete) > 0) {
             while ($row = mysqli_fetch_assoc($requete)) {
                 echo '<form action="" method="post">';
@@ -41,26 +49,33 @@ try {
         }
     }
 } catch (Exception $e) {
-    echo "erreur de connexion";
+    echo $e->getMessage();
 }
 
 if (isset($_POST['submit'])) {
     $idmembre = $_POST['idmembre'];
     updateBDDD($_POST['nom'], $_POST['prenom'], $_POST['telephone'], $_POST['adresse'], $_POST['date'], $_POST['login'], $_POST['password'], $idmembre);
     echo "vous avez modifié un membre";
-    header('Location: admin.php');
+    header('Location: membre.php');
     exit();
 }
 
 function updateBDDD($nom, $prenom, $telephone, $adresse, $date, $login, $password, $idmembre) {
     try {
         $connect = mysqli_connect('localhost', 'root', '', 'bonnebouffe');
+        if (!$connect) {
+            throw new Exception('Erreur de connexion : ' . mysqli_connect_error());
+        }
         echo "connexion réussie <br>";
-        mysqli_query($connect, "UPDATE MEMBRES SET nom='$nom', prenom='$prenom', telephone='$telephone', adresse='$adresse', datedenaissnace='$date', login='$login', password='$password' WHERE idmembre='$idmembre'");
+        $requete = "UPDATE MEMBRES SET nom='$nom', prenom='$prenom', telephone='$telephone', adresse='$adresse', datedenaissnace='$date', login='$login', password='$password' WHERE idmembre='$idmembre'";
+        if (!mysqli_query($connect, $requete)) {
+            throw new Exception('Erreur de requête : ' . mysqli_error($connect));
+        }
     } catch (Exception $e) {
-        echo "il y a une erreur dans le code de ma connexion <br>";
+        echo $e->getMessage();
     }
 }
+ob_end_flush();
 ?>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

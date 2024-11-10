@@ -61,7 +61,7 @@
         }
         else
         {
-            echo "Aucune donnée recue ";
+            //echo "Aucune donnée recue ";
         }
         function insertBD($nom,$ingredient,$preparation,$nbpers,$cout,$date,$photo,$idm){
             try

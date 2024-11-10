@@ -39,7 +39,7 @@
         }
         else
         {
-            echo "Aucune donnée recue ";
+            //echo "Aucune donnée recue ";
         }
         function insertBD($id,$nom,$prenom,$tel,$adresse,$date,$login,$passwd){
             try

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <title>Add-recipes-page</title>
 </head>
@@ -24,9 +25,10 @@
         <input type="file" name="photo" accept="image/*" required><br><br>
         <label for="nbpers">Nombre de personnes</label>
         <input type="text" name="nbpers" placeholder="nombre de personnes" required><br><br>
-    <button type="submit">Ajouter</button> <a href=""><input type="submit" name="annuler" value="Annuler"></a>
+        <button type="submit">Ajouter</button> 
     </form>
 </div>
+
 <?php
         session_start();
         if(isset($_POST['nom'])&& isset($_POST['ingredient'])&& isset($_POST['preparation']) && isset($_POST['cout'])&& isset($_POST['date'])&& isset($_POST['nbpers']))
@@ -45,7 +47,7 @@
         }
         else
         {
-            echo "Aucune donnée recue ";
+            //echo "Aucune donnée recue ";
         }
         function insertBD($nom,$ingredient,$preparation,$nbpers,$cout,$date,$photo,$idm){
             try

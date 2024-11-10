@@ -8,6 +8,9 @@
         function confirmSuppression() {
             return confirm("Êtes-vous sûr de vouloir supprimer cette recette ?");
         }
+        function confirmSuppr() {
+            return confirm("Êtes-vous sûr de vouloir supprimer ce membre ?");
+        }
     </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <title>Admin-Page</title>
@@ -16,6 +19,10 @@
     <div class="container mt-3">
         <div class=" d-flex justify-content-between">  
             <p >Ajouter une recette :</p>
+            <form action="" method="get">
+                <input type="text" placeholder="search" name="searchrect">
+                <button name="btnrech">search</button>
+            </form> 
            <form action="" method="get">
                 <button name="choix" value="ajout">Ajouter</button>
            </form> 
@@ -27,20 +34,23 @@
              $connect=mysqli_connect('localhost','root','','bonnebouffe');
              echo "connexion réussie <br>";
              $result=10;
-             $req=mysqli_query($connect,'SELECT COUNT(*) AS total FROM RECETTES');
+             $search = isset($_GET['searchrect']) ? $_GET['searchrect'] : '';
+             $search_query = $search ? "WHERE nom LIKE '%$search%'" : '';
+             $req=mysqli_query($connect,"SELECT COUNT(*) AS total FROM RECETTES $search_query ");
              $rows=mysqli_fetch_assoc($req);
              $total_pages = ceil($rows['total'] / $result);
 
              $page = isset($_GET['page']) ? $_GET['page'] : 1;
              $page_actuel = ($page - 1) * $result;
 
-             $requete=mysqli_query($connect,"SELECT * FROM RECETTES LIMIT $page_actuel,$result");
+             $requete=mysqli_query($connect,"SELECT * FROM RECETTES $search_query LIMIT $page_actuel,$result");
              echo '<table class="table table-bordered table-hover">';
              echo '<thead class="table-info">';
              echo '<td>NUMERO</td>';
              echo '<td>NOM</td>';
              echo '<td>INGREDIENT</td>';
              echo '<td>PHOTO</td>';
+             echo '<td>COUT</td>';
              echo '<td>DATE INSCRITE</td>';
              echo '<td>MODIFICATION</td>';
              echo '<td>SUPPRESSION</td>';
@@ -54,6 +64,7 @@
                      echo'<td>'.$row["nom"].'</td>';
                      echo'<td>'.$row["ingredients"].'</td>';
                      echo'<td><img class="para" src="data:image/jpeg;base64,'.base64_encode($row["photo"]).'"></td>';
+                     echo'<td>'.$row["cout"].'</td>';
                      echo'<td>'.$row["dateinscrite"].'</td>';
                      echo'<td><form action="modifrect.php" method="get"><button name="idrecette" value="'.$row["idrecette"].'">Modifier</button></form></td>';
                      echo'<td><form action="" method="post" onsubmit="return confirmSuppression();"><input type="hidden" name="idrecette" value="'.$row["idrecette"].'"><button name="choix" value="supprimer">Supprimer</button></form></td>';
@@ -66,11 +77,12 @@
             echo'<div>';
             echo'<nav aria-label="Page navigation example">';
             echo'<ul class="pagination">';
-            ?>
-                <?php for ($i = 1; $i <= $total_pages; $i++) { echo'<li class="page-item">'; ?>
-                    <a class="page-link" href="admin.php?page=<?php echo $i; ?>"><?php echo $i; ?></a>
-                <?php  echo'</li>';} ?>
-            <?php
+            for ($i = 1; $i <= $total_pages; $i++) 
+            { 
+                echo'<li class="page-item">'; 
+                echo'<a class="page-link" href="admin.php?page='.$i.'">'.$i.'</a>';
+                echo'</li>';
+            }
             echo'</nav>';
             echo'</div>';
          }
@@ -85,7 +97,7 @@
             $idrecette = $_POST['idrecette'];
             deleteBD($idrecette);
             echo 'Recette supprimée avec succès';
-            header('Location: membre.php');
+            header('Location: admin.php');
             exit();
         }
         if(isset($_GET['choix']))
@@ -110,10 +122,14 @@
                 echo "il y a une erreur dans le code de ma connexion";
             }
         }
-        ob_end_flush();
+        
     ?>
     <div class=" d-flex justify-content-between">  
         <p >Ajouter un membre : </p>
+        <form action="" method="get">
+            <input type="text" placeholder="search" name="searchmemb">
+            <button name="btnmemb">search</button>
+        </form> 
         <form action="" method="get">
             <button name="choix" value="ajoutmembre">Ajouter</button>
         </form> 
@@ -124,6 +140,8 @@
             $connect=mysqli_connect('localhost','root','','bonnebouffe');
             echo "connexion réussie <br>";
             $results=10;
+            $searchs = isset($_GET['searchmemb']) ? $_GET['searchmemb'] : '';
+            $searchs_query = $searchs ? "WHERE nom LIKE '%$searchs%'" : '';
             $reqs=mysqli_query($connect,'SELECT COUNT(*) AS total FROM MEMBRES');
             $rows=mysqli_fetch_assoc($reqs);
             $total_page = ceil($rows['total'] / $results);
@@ -131,7 +149,7 @@
             $pages = isset($_GET['page']) ? $_GET['page'] : 1;
             $page_actuels = ($pages - 1) * $results;
 
-            $request=mysqli_query($connect,"SELECT * FROM MEMBRES LIMIT $page_actuels,$results");
+            $request=mysqli_query($connect,"SELECT * FROM MEMBRES $searchs_query LIMIT $page_actuels,$results");
             echo '<table class="table table-bordered table-hover">';
             echo '<thead class="table-info">';
             echo '<td>NUMERO</td>';
@@ -152,8 +170,8 @@
                     echo'<td>'.$row["prenom"].'</td>';
                     echo'<td>'.$row["telephone"].'</td>';
                     echo'<td>'.$row["login"].'</td>';
-                    echo'<td><form action="modifrect.php" method="get"><button name="idmembre" value="'.$row["idmembre"].'">Modifier</button></form></td>';
-                    echo'<td><form action="" method="post" onsubmit="return confirmSuppression();"><input type="hidden" name="idmembre" value="'.$row["idmembre"].'"><button name="choix" value="supprimer">Supprimer</button></form></td>';
+                    echo'<td><form action="miseajour.php" method="get"><button name="idmembre" value="'.$row["idmembre"].'" type="submit">Modifier</button></form></td>';
+                    echo'<td><form action="" method="post" onsubmit="return confirmSuppr();"><input type="hidden" name="idmembre" value="'.$row["idmembre"].'"><button name="choix" value="supprime">Supprimer</button></form></td>';
                     echo'</tr>';
                       
                 }
@@ -162,13 +180,14 @@
            echo '</table>'; 
            echo'<div>';
            echo'<nav aria-label="Page navigation example">';
-           echo'<ul class="pagination">';
-           ?>
-               <?php for ($i = 1; $i <= $total_pages; $i++) { echo'<li class="page-item">'; ?>
-                   <a class="page-link" href="admin.php?page=<?php echo $i; ?>"><?php echo $i; ?></a>
-               <?php  echo'</li>';} ?>
-           <?php
-           echo'</nav>';
+            echo'<ul class="pagination">';
+            for ($i = 1; $i <= $total_page; $i++) 
+            { 
+                echo'<li class="page-item">'; 
+                echo'<a class="page-link" href="admin.php?page='.$i.'">'.$i.'</a>';
+                echo'</li>';
+            }
+            echo'</nav>';
            echo'</div>';
         }
         catch(Exception $e)
@@ -189,11 +208,12 @@
             try {
                 $connect = mysqli_connect('localhost', 'root', '', 'bonnebouffe');
                 echo "connexion réussie <br>";
-                mysqli_query($connect, "DELETE FROM MEMBRES WHERE idmembre=$idmembre");
+                mysqli_query($connect, "DELETE FROM MEMBRES WHERE idmembre='$idmembre'");
             } catch (Exception $e) {
                 echo "il y a une erreur dans le code de ma connexion";
             }
         }
+        ob_end_flush();
     ?>
     </div>
     

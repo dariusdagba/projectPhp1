@@ -21,11 +21,13 @@
            </form> 
          </div>
     <?php
-         ob_start();
+        session_start();
+        ob_start();
          try
          {
              $connect=mysqli_connect('localhost','root','','bonnebouffe');
              echo "connexion réussie <br>";
+             
              $result=10;
              $req=mysqli_query($connect,'SELECT COUNT(*) AS total FROM RECETTES');
              $rows=mysqli_fetch_assoc($req);
@@ -41,6 +43,7 @@
              echo '<td>NOM</td>';
              echo '<td>INGREDIENT</td>';
              echo '<td>PHOTO</td>';
+             echo '<td>COUT</td>';
              echo '<td>DATE INSCRITE</td>';
              echo '<td>MODIFICATION</td>';
              echo '<td>SUPPRESSION</td>';
@@ -49,15 +52,25 @@
              if(mysqli_num_rows($requete)>0){
                  while($row=mysqli_fetch_assoc($requete))
                  {
+                     $idr=verification($_SESSION["loginmemb"],$row["idrecette"]);
                      echo'<tr>'; 
                      echo'<td>'.$row["idrecette"].'</td>';
                      echo'<td>'.$row["nom"].'</td>';
                      echo'<td>'.$row["ingredients"].'</td>';
                      echo'<td><img class="para" src="data:image/jpeg;base64,'.base64_encode($row["photo"]).'"></td>';
+                     echo'<td>'.$row["cout"].'</td>';
                      echo'<td>'.$row["dateinscrite"].'</td>';
-                     echo'<td><form action="modifrecette.php" method="get"><button name="idrecette" value="'.$row["idrecette"].'">Modifier</button></form></td>';
-                     echo'<td><form action="" method="post" onsubmit="return confirmSuppression();"><input type="hidden" name="idrecette" value="'.$row["idrecette"].'"><button name="choix" value="supprimer">Supprimer</button></form></td>';
-                     echo'</tr>';
+                     if($idr)
+                     {
+                        echo'<td><form action="modifrecette.php" method="get"><button name="idrecette" value="'.$row["idrecette"].'">Modifier</button></form></td>';
+                        echo'<td><form action="" method="post" onsubmit="return confirmSuppression();"><input type="hidden" name="idrecette" value="'.$row["idrecette"].'"><button name="choix" value="supprimer">Supprimer</button></form></td>';   
+                     }
+                     else
+                     {
+                        echo'<td><form action="modifrecette.php" method="get"><button disabled name="idrecette" value="'.$row["idrecette"].'">Modifier</button></form></td>';
+                        echo'<td><form action="" method="post" onsubmit="return confirmSuppression();"><input type="hidden" name="idrecette" value="'.$row["idrecette"].'"><button disabled name="choix" value="supprimer">Supprimer</button></form></td>';
+                     }
+                    echo'</tr>';
                        
                  }
              }
@@ -66,11 +79,12 @@
             echo'<div>';
             echo'<nav aria-label="Page navigation example">';
             echo'<ul class="pagination">';
-            ?>
-                <?php for ($i = 1; $i <= $total_pages; $i++) { echo'<li class="page-item">'; ?>
-                    <a class="page-link" href="membre.php?page=<?php echo $i; ?>"><?php echo $i; ?></a>
-                <?php  echo'</li>';} ?>
-            <?php
+            for ($i = 1; $i <= $total_pages; $i++) 
+            { 
+                echo'<li class="page-item">'; 
+                echo'<a class="page-link" href="membre.php?page='.$i.'">'.$i.'</a>';
+                echo'</li>';
+            }
             echo'</nav>';
             echo'</div>';
          }
@@ -81,19 +95,28 @@
            
     ?>
     <?php
-        if (isset($_POST['choix']) && $_POST['choix'] == 'supprimer') {
+       if (isset($_POST['choix']) && $_POST['choix'] == 'supprimer') {
+        if (isset($_COOKIE["logincookie"])) {
             $idrecette = $_POST['idrecette'];
             deleteBD($idrecette);
             echo 'Recette supprimée avec succès';
             header('Location: membre.php');
             exit();
+        } else {
+            header('Location: login.php');
+            exit();
         }
+    }
         if(isset($_GET['choix']))
         {
             switch($_GET['choix'])
             {
                 case 'ajout':
-                    header('Location:ajoutrecette.php');
+                    if(isset($_COOKIE["logincookie"])) {
+                        header('Location:ajoutrecette.php');
+                    } else {
+                        header('Location:login.php');
+                    }
                 break;
             }
 
@@ -105,6 +128,18 @@
                 mysqli_query($connect, "DELETE FROM RECETTES WHERE idrecette=$idrecette");
             } catch (Exception $e) {
                 echo "il y a une erreur dans le code de ma connexion";
+            }
+        }
+        function verification($login,$idrecette){
+            try
+            {
+                $connect=mysqli_connect('localhost','root','','bonnebouffe');
+                $req=mysqli_query($connect,"SELECT  MEMBRES.idmembre, RECETTES.idrecette, RECETTES.idmembre FROM MEMBRES JOIN RECETTES ON MEMBRES.idmembre=RECETTES.idmembre WHERE login='$login'AND RECETTES.idrecette=$idrecette");
+                return mysqli_num_rows($req)>0;
+            }
+            catch(Exception $e)
+            {
+                echo "login  ou mot de passe incorrect !";
             }
         }
         ob_end_flush();
